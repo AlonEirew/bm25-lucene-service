@@ -1,0 +1,105 @@
+import com.google.common.collect.Lists;
+import data.*;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.IOUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+
+public class CreateOrDeleteIndex {
+
+    public static final String PASSAGE = "passage";
+    public static final String PASSAGE_ID = "passage_id";
+    public static final String PASSAGE_CORE_ID = "passage_coref_id";
+
+    public static void main(String[] args) throws IOException {
+        System.out.println("[C]reate or [D]elete?");
+        Scanner in = new Scanner(System.in);
+        String ans = in.nextLine();
+        in.close();
+        Path tempIndex = Paths.get("tempIndex");
+        Path outFolder = Paths.get("search_jsons");
+        String wecFolder = "input/WEC-Eng";
+        if(ans.equalsIgnoreCase("C")) {
+            System.out.println("Creating elastic index");
+            createResources(wecFolder, outFolder, tempIndex);
+        } else if (ans.equalsIgnoreCase("D")) {
+            System.out.println("deleting elastic index");
+            IOUtils.rm(tempIndex, outFolder);
+        } else {
+            System.out.println("Notion was done");
+        }
+
+        System.out.println("Done!");
+    }
+
+    public static void createResources(String wecFolder, Path outFolder, Path tempIndex) throws IOException {
+        Path indexPath = Files.createDirectory(tempIndex);
+        Files.createDirectory(outFolder);
+        try {
+            Map<SplitType, SearchSplit> splitParts = createAndSaveQueriesAndMentions(wecFolder, outFolder.toString());
+            persistToDirectory(splitParts, indexPath);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            IOUtils.rm(tempIndex);
+        }
+    }
+
+    private static Map<SplitType, SearchSplit> createAndSaveQueriesAndMentions(String wecFolder, String outFolder) throws IOException {
+        List<WECSplit> splits = Utils.readWECJsonFolder(wecFolder);
+        Map<SplitType, SearchSplit> splitParts = new HashMap<>();
+        splitParts.put(SplitType.Train, new SearchSplit(SplitType.Train));
+        splitParts.put(SplitType.Dev, new SearchSplit(SplitType.Dev));
+        splitParts.put(SplitType.Test, new SearchSplit(SplitType.Test));
+        for(WECSplit split : splits) {
+            List<Cluster> splitClusters = new ArrayList<>(split.getClusters().values());
+            List<List<Cluster>> partitions = Lists.partition(splitClusters, (splitClusters.size() / 3) + 1);
+            splitParts.get(SplitType.Train).addClusters(partitions.get(0));
+            splitParts.get(SplitType.Dev).addClusters(partitions.get(1));
+            splitParts.get(SplitType.Test).addClusters(partitions.get(2));
+        }
+
+        for(SplitType st : splitParts.keySet()) {
+            Utils.writeWECJsonFile(splitParts.get(st).getQueries(),
+                    outFolder + File.separator + st.name() + "_queries.json");
+            Utils.writeWECJsonFile(splitParts.get(st).getPassages(),
+                    outFolder + File.separator + st.name() + "_passages.json");
+        }
+
+        return splitParts;
+    }
+
+    private static void persistToDirectory(Map<SplitType, SearchSplit> splitParts, Path tempIndex) throws IOException {
+        for (SearchSplit split : splitParts.values()) {
+            Path currPath = Paths.get(tempIndex + File.separator + split.getSplitType().name());
+            Files.createDirectory(currPath);
+            Directory directory = FSDirectory.open(currPath);
+            Analyzer analyzer = new StandardAnalyzer();
+            IndexWriterConfig config = new IndexWriterConfig(analyzer);
+            IndexWriter iwriter = new IndexWriter(directory, config);
+            for(Mention ment : split.getPassages()) {
+                Document doc = new Document();
+                String text = String.join(" ", ment.getMention_context());
+                doc.add(new Field(PASSAGE, text, TextField.TYPE_STORED));
+                doc.add(new Field(PASSAGE_ID, ment.getMention_id(), TextField.TYPE_STORED));
+                doc.add(new Field(PASSAGE_CORE_ID, String.valueOf(ment.getCoref_chain()), TextField.TYPE_STORED));
+                iwriter.addDocument(doc);
+            }
+
+            iwriter.close();
+            directory.close();
+        }
+    }
+}
