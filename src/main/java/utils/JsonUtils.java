@@ -1,3 +1,5 @@
+package utils;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -16,7 +18,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class Utils {
+public class JsonUtils {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static List<WECSplit> readWECJsonFolder(String wecFolder) {

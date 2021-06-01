@@ -1,5 +1,6 @@
 import data.Mention;
 import data.WECSplit;
+import utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,31 +19,22 @@ public class ToColBertFormat {
     public static void main(String[] args) throws IOException {
         File wecQueiresFile = new File("search_jsons/" + SPLIT + "_queries.json");
         File wecPassagesFile = new File("search_jsons/" + SPLIT + "_passages.json");
-        WECSplit queries = Utils.readWECJsonFile(wecQueiresFile);
-        WECSplit passages = Utils.readWECJsonFile(wecPassagesFile);
+        WECSplit queries = JsonUtils.readWECJsonFile(wecQueiresFile);
+        WECSplit passages = JsonUtils.readWECJsonFile(wecPassagesFile);
 
-        List<String> queryColbert = queryToColBertFormat(queries.getMentions());
-        List<String> passageColbert = passageToColBertFormat(passages.getMentions());
+        List<String> queryColbert = mentionsToColBertFormat(queries.getMentions());
+        List<String> passageColbert = mentionsToColBertFormat(passages.getMentions());
 
-        Path queriesOutFile = Paths.get("output/colbert/" + SPLIT.toLowerCase(Locale.ROOT) +"queryColbert.txt");
-        Path passagesOutFile = Paths.get("output/colbert/" + SPLIT.toLowerCase(Locale.ROOT) +"passageColbert.txt");
+        Path queriesOutFile = Paths.get("output/colbert/" + SPLIT.toLowerCase(Locale.ROOT) +"QueryColbert.tsv");
+        Path passagesOutFile = Paths.get("output/colbert/" + SPLIT.toLowerCase(Locale.ROOT) +"PassageColbert.tsv");
         Files.write(queriesOutFile, queryColbert, Charset.defaultCharset());
         Files.write(passagesOutFile, passageColbert, Charset.defaultCharset());
     }
 
-    private static List<String> queryToColBertFormat(List<Mention> mentions) {
+    public static List<String> mentionsToColBertFormat(List<Mention> mentions) {
         List<String> convertedList = new ArrayList<>();
-        for(Mention ment : mentions) {
-            convertedList.add(ment.getCoref_chain() + "\t" + String.join(" ", ment.getMention_context()));
-        }
-
-        return convertedList;
-    }
-
-    private static List<String> passageToColBertFormat(List<Mention> mentions) {
-        List<String> convertedList = new ArrayList<>();
-        for(Mention ment : mentions) {
-            convertedList.add(ment.getMention_id() + "\t" + String.join(" ", ment.getMention_context()));
+        for(Mention mention : mentions) {
+            convertedList.add(mention.getMention_id() + "\t" + String.join(" ", mention.getMention_context()));
         }
 
         return convertedList;

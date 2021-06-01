@@ -11,6 +11,16 @@ public class Mention {
     private String tokens_str;
     private List<Integer> tokens_number;
 
+    public Mention(Mention mention) {
+        this.coref_chain = mention.coref_chain;
+        this.coref_link = mention.coref_link;
+        this.doc_id = mention.doc_id;
+        this.mention_context = mention.mention_context;
+        this.mention_id = mention.mention_id;
+        this.tokens_str = mention.tokens_str;
+        this.tokens_number = mention.tokens_number;
+    }
+
     public int getCoref_chain() {
         return coref_chain;
     }

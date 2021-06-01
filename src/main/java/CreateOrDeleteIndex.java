@@ -10,6 +10,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.IOUtils;
+import utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,16 +50,17 @@ public class CreateOrDeleteIndex {
         Path indexPath = Files.createDirectory(tempIndex);
         Files.createDirectory(outFolder);
         try {
-            Map<SplitType, SearchSplit> splitParts = createAndSaveQueriesAndMentions(wecFolder, outFolder.toString());
-            persistToDirectory(splitParts, indexPath);
+            Map<SplitType, SearchSplit> splitParts = createQueriesAndMentions(wecFolder);
+            persistAndReIndex(splitParts, indexPath);
+            writeJsonToFile(splitParts, outFolder.toString());
         } catch (Exception ex) {
             ex.printStackTrace();
             IOUtils.rm(tempIndex);
         }
     }
 
-    private static Map<SplitType, SearchSplit> createAndSaveQueriesAndMentions(String wecFolder, String outFolder) throws IOException {
-        List<WECSplit> splits = Utils.readWECJsonFolder(wecFolder);
+    private static Map<SplitType, SearchSplit> createQueriesAndMentions(String wecFolder) throws IOException {
+        List<WECSplit> splits = JsonUtils.readWECJsonFolder(wecFolder);
         Map<SplitType, SearchSplit> splitParts = new HashMap<>();
         splitParts.put(SplitType.Train, new SearchSplit(SplitType.Train));
         splitParts.put(SplitType.Dev, new SearchSplit(SplitType.Dev));
@@ -66,22 +68,24 @@ public class CreateOrDeleteIndex {
         for(WECSplit split : splits) {
             List<Cluster> splitClusters = new ArrayList<>(split.getClusters().values());
             List<List<Cluster>> partitions = Lists.partition(splitClusters, (splitClusters.size() / 3) + 1);
-            splitParts.get(SplitType.Train).addClusters(partitions.get(0));
-            splitParts.get(SplitType.Dev).addClusters(partitions.get(1));
-            splitParts.get(SplitType.Test).addClusters(partitions.get(2));
-        }
-
-        for(SplitType st : splitParts.keySet()) {
-            Utils.writeWECJsonFile(splitParts.get(st).getQueries(),
-                    outFolder + File.separator + st.name() + "_queries.json");
-            Utils.writeWECJsonFile(splitParts.get(st).getPassages(),
-                    outFolder + File.separator + st.name() + "_passages.json");
+            splitParts.get(SplitType.Train).addPassagesAndQueriesFromClusters(partitions.get(0));
+            splitParts.get(SplitType.Dev).addPassagesAndQueriesFromClusters(partitions.get(1));
+            splitParts.get(SplitType.Test).addPassagesAndQueriesFromClusters(partitions.get(2));
         }
 
         return splitParts;
     }
 
-    private static void persistToDirectory(Map<SplitType, SearchSplit> splitParts, Path tempIndex) throws IOException {
+    private static void writeJsonToFile(Map<SplitType, SearchSplit> splitParts, String outFolder) throws IOException {
+        for(SplitType st : splitParts.keySet()) {
+            JsonUtils.writeWECJsonFile(splitParts.get(st).getQueries(),
+                    outFolder + File.separator + st.name() + "_queries.json");
+            JsonUtils.writeWECJsonFile(splitParts.get(st).getPassages(),
+                    outFolder + File.separator + st.name() + "_passages.json");
+        }
+    }
+
+    private static void persistAndReIndex(Map<SplitType, SearchSplit> splitParts, Path tempIndex) throws IOException {
         for (SearchSplit split : splitParts.values()) {
             Path currPath = Paths.get(tempIndex + File.separator + split.getSplitType().name());
             Files.createDirectory(currPath);
@@ -89,7 +93,9 @@ public class CreateOrDeleteIndex {
             Analyzer analyzer = new StandardAnalyzer();
             IndexWriterConfig config = new IndexWriterConfig(analyzer);
             IndexWriter iwriter = new IndexWriter(directory, config);
-            for(Mention ment : split.getPassages()) {
+            for(int idx = 0 ; idx < split.getPassages().size() ; idx++) {
+                Mention ment = split.getPassages().get(idx);
+                ment.setMention_id(String.valueOf(idx));
                 Document doc = new Document();
                 String text = String.join(" ", ment.getMention_context());
                 doc.add(new Field(PASSAGE, text, TextField.TYPE_STORED));

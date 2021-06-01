@@ -10,7 +10,7 @@ public class SearchSplit {
 
     public SearchSplit(List<Cluster> clusters, SplitType splitType) {
         this(splitType);
-        addClusters(clusters);
+        addPassagesAndQueriesFromClusters(clusters);
     }
 
     public SearchSplit(SplitType splitType) {
@@ -25,13 +25,13 @@ public class SearchSplit {
         return queries;
     }
 
-    public void addClusters(List<Cluster> clusters) {
+    public void addPassagesAndQueriesFromClusters(List<Cluster> clusters) {
         for(Cluster cluster : clusters) {
-            addCluster(cluster);
+            addPassageAndQueryFromCluster(cluster);
         }
     }
 
-    public void addCluster(Cluster cluster) {
+    public void addPassageAndQueryFromCluster(Cluster cluster) {
         if(cluster.isSingleton()) {
             this.passages.addAll(cluster.getMentions());
         } else {

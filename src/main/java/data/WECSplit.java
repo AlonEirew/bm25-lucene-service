@@ -38,4 +38,22 @@ public class WECSplit {
 
         return clusters;
     }
+
+    public boolean addMentionToCluster(Mention mention) {
+        if(mention != null && this.clusters.containsKey(mention.getCoref_chain())) {
+            this.clusters.get(mention.getCoref_chain()).addMention(mention);
+            this.mentions.add(mention);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean removeMentionFromCluster(Mention mention) {
+        if(mention != null && this.clusters.containsKey(mention.getCoref_chain())) {
+            boolean mentRm = this.mentions.removeIf(value -> value.getMention_id().equals(mention.getMention_id()));
+            boolean clustRm = this.clusters.get(mention.getCoref_chain()).removeMention(mention);
+            return mentRm && clustRm;
+        }
+        return false;
+    }
 }

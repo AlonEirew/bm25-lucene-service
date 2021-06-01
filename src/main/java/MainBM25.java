@@ -12,6 +12,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import utils.JsonUtils;
+import utils.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,16 +23,16 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-public class Main {
+public class MainBM25 {
 
-    private static final String SPLIT = "Test";
+    private static final String SPLIT = "Dev";
 
     public static void main(String[] args) throws IOException {
         File wecQueiresFile = new File("search_jsons/" + SPLIT + "_queries.json");
         File wecPassagesFile = new File("search_jsons/" + SPLIT + "_passages.json");
         String indexDir = "tempIndex/" + SPLIT;
-        WECSplit queries = Utils.readWECJsonFile(wecQueiresFile);
-        WECSplit passages = Utils.readWECJsonFile(wecPassagesFile);
+        WECSplit queries = JsonUtils.readWECJsonFile(wecQueiresFile);
+        WECSplit passages = JsonUtils.readWECJsonFile(wecPassagesFile);
         System.out.println("SPLIT=" + SPLIT);
         System.out.println("Number of queries=" + queries.getMentions().size());
         System.out.println("Number of passages=" + passages.getMentions().size());
@@ -55,11 +57,11 @@ public class Main {
         List<SearchResult> results = new ArrayList<>();
         for(Mention ment : queries) {
             totalMents += passagesClusters.get(ment.getCoref_chain()).getMentions().size();
-//            String finalQuery = QueryParser.escape(String.join(" ", ment.getMention_context()));
-            String mentQuery = QueryParser.escape(ment.getTokens_str());
-//            String mentQuery = getQuerySentence(ment);
-            String finalQuery = mentQuery + ". " + getQueryNERs(ment);
-//            String querySentence = getQueryNERs(ment);
+//            String finalQuery = String.join(" ", ment.getMention_context());
+            String mentQuery = ment.getTokens_str();
+//            String mentQuery = Utils.getQuerySentence(ment);
+            String finalQuery = mentQuery + ". " + Utils.getQueryNERs(ment);
+//            String querySentence = Utils.getQueryNERs(ment);
 
             String queryText = QueryParser.escape(finalQuery);
             ScoreDoc[] hits = searchIndex(idxSearcher, parser, queryText, topK);
@@ -77,7 +79,7 @@ public class Main {
         System.out.println("Coverage percentage=" + (covered / totalMents));
         System.out.println("MRR=" + (mrr / queries.size()));
 
-        Path colberTopKFile = Paths.get("output/colbert/" + SPLIT.toLowerCase(Locale.ROOT) + "Top" + topK + ".json");
+        Path colberTopKFile = Paths.get("output/colbert/" + SPLIT.toLowerCase(Locale.ROOT) + "Top" + topK + ".tsv");
         Files.write(colberTopKFile, SearchResult.getAllQueryPassages(results), Charset.defaultCharset());
     }
 
@@ -124,40 +126,5 @@ public class Main {
     public static void closeIndexSearcher(IndexSearcher indexSearcher) throws IOException {
         if (indexSearcher != null)
             indexSearcher.getIndexReader().close();
-    }
-
-    private static String getQuerySentence(Mention query) {
-        edu.stanford.nlp.simple.Document doc = new edu.stanford.nlp.simple.Document(
-                String.join(" ", query.getMention_context()));
-
-        for(Sentence sent : doc.sentences()) {
-            for (int i = 0; i < sent.tokens().size(); i++) {
-                CoreNLPProtos.Token.Builder builder = sent.rawToken(i);
-                if (builder.getTokenBeginIndex() == query.getTokens_number().get(0)) {
-                    return sent.text();
-                }
-            }
-        }
-
-        return null;
-    }
-
-    private static String getQueryNERs(Mention query) {
-        Set<String> docNers = new HashSet<>();
-        edu.stanford.nlp.simple.Document doc = new edu.stanford.nlp.simple.Document(
-                String.join(" ", query.getMention_context()));
-
-        for(Sentence sent : doc.sentences()) {
-            for (int i = 0; i < sent.tokens().size(); i++) {
-                sent.nerTags();
-                CoreNLPProtos.Token.Builder builder = sent.rawToken(i);
-                String nerTag = builder.getNer();
-                if (!nerTag.equals("O")) {
-                    docNers.add(builder.getWord());
-                }
-            }
-        }
-
-        return String.join(" ", docNers);
     }
 }

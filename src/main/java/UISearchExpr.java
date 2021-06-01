@@ -5,6 +5,7 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
+import utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,27 +23,27 @@ public class UISearchExpr {
         Analyzer analyzer = new StandardAnalyzer();
         QueryParser parser = new QueryParser(CreateOrDeleteIndex.PASSAGE, analyzer);
 
-        WECSplit queries = Utils.readWECJsonFile(wecQueiresFile);
-        WECSplit passages = Utils.readWECJsonFile(wecPassagesFile);
+        WECSplit queries = JsonUtils.readWECJsonFile(wecQueiresFile);
+        WECSplit passages = JsonUtils.readWECJsonFile(wecPassagesFile);
 
-        IndexSearcher idxSearcher = Main.getIndexSearcher(indexDir);
+        IndexSearcher idxSearcher = MainBM25.getIndexSearcher(indexDir);
         for(int i = 0 ; i < 5 ; i++) {
             int rand = ThreadLocalRandom.current().nextInt(0, queries.getMentions().size());
             Mention query = queries.getMentions().get(rand);
             int inQueryClust = passages.getClusters().get(query.getCoref_chain()).getMentions().size();
             String originQueryText = QueryParser.escape(String.join(" ", query.getMention_context()));
-            ScoreDoc[] origHits = Main.searchIndex(idxSearcher, parser, originQueryText, topK);
+            ScoreDoc[] origHits = MainBM25.searchIndex(idxSearcher, parser, originQueryText, topK);
             System.out.println("QueryText=" + getMentionContextForPrint(query));
             System.out.println("Results Original:");
-            float originalCount = Main.getSearchResult(idxSearcher, query, origHits).getConvertedMents();
+            float originalCount = MainBM25.getSearchResult(idxSearcher, query, origHits).getConvertedMents();
             System.out.println("Original query=" + originalCount + ":" + inQueryClust);
             boolean ret = true;
             while(ret) {
                 String inputQuery = in.nextLine();
                 if (inputQuery != null && !inputQuery.isEmpty()) {
-                    ScoreDoc[] inputHits = Main.searchIndex(idxSearcher, parser, inputQuery, topK);
+                    ScoreDoc[] inputHits = MainBM25.searchIndex(idxSearcher, parser, inputQuery, topK);
                     System.out.println("Results Input:");
-                    float inputCount = Main.getSearchResult(idxSearcher, query, inputHits).getConvertedMents();
+                    float inputCount = MainBM25.getSearchResult(idxSearcher, query, inputHits).getConvertedMents();
                     System.out.println("Input query=" + inputCount + ":" + inQueryClust);
                     System.out.println("Retry? [y/n]");
                     String retStr = in.nextLine();
@@ -55,7 +56,7 @@ public class UISearchExpr {
         }
 
         in.close();
-        Main.closeIndexSearcher(idxSearcher);
+        MainBM25.closeIndexSearcher(idxSearcher);
     }
 
     private static String getMentionContextForPrint(Mention query) {

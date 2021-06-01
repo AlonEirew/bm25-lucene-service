@@ -40,4 +40,8 @@ public class Cluster {
     public List<Mention> getMentions() {
         return mentions;
     }
+
+    public boolean removeMention(Mention mention) {
+        return this.mentions.removeIf(value -> value.getMention_id().equals(mention.getMention_id()));
+    }
 }

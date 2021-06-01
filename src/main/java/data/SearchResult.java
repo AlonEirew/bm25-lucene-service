@@ -39,7 +39,9 @@ public class SearchResult {
     public List<String> getQueryPassages() {
         List<String> coveredQueryPassage = new ArrayList<>();
         for (RetPassage pass : this.topKRetPassages) {
-            coveredQueryPassage.add(query.getCoref_chain() + "\t" + pass.getPassageId() + "\t" + pass.getPassageRank());
+            int gold = this.query.getCoref_chain() == pass.getRelQueryId() ? 1 : 0;
+            coveredQueryPassage.add(query.getMention_id() + "\t" + pass.getPassageId() + "\t" + pass.getPassageRank() +
+                    "\t" + gold);
         }
 
         return coveredQueryPassage;
