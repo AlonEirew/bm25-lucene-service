@@ -50,8 +50,8 @@ public class CreateOrDeleteIndex {
         Path indexPath = Files.createDirectory(tempIndex);
         Files.createDirectory(outFolder);
         try {
-            Map<SplitType, SearchSplit> splitParts = createQueriesAndMentions(wecFolder);
-            persistAndReIndex(splitParts, indexPath);
+            Map<SplitType, SearchSplit> splitParts = createQueriesAndMentionsSplit(wecFolder);
+            persistToLuceneIndex(splitParts, indexPath);
             writeJsonToFile(splitParts, outFolder.toString());
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -59,7 +59,7 @@ public class CreateOrDeleteIndex {
         }
     }
 
-    private static Map<SplitType, SearchSplit> createQueriesAndMentions(String wecFolder) throws IOException {
+    private static Map<SplitType, SearchSplit> createQueriesAndMentionsSplit(String wecFolder) throws IOException {
         List<WECSplit> splits = JsonUtils.readWECJsonFolder(wecFolder);
         Map<SplitType, SearchSplit> splitParts = new HashMap<>();
         splitParts.put(SplitType.Train, new SearchSplit(SplitType.Train));
@@ -85,7 +85,7 @@ public class CreateOrDeleteIndex {
         }
     }
 
-    private static void persistAndReIndex(Map<SplitType, SearchSplit> splitParts, Path tempIndex) throws IOException {
+    private static void persistToLuceneIndex(Map<SplitType, SearchSplit> splitParts, Path tempIndex) throws IOException {
         for (SearchSplit split : splitParts.values()) {
             Path currPath = Paths.get(tempIndex + File.separator + split.getSplitType().name());
             Files.createDirectory(currPath);
@@ -93,14 +93,12 @@ public class CreateOrDeleteIndex {
             Analyzer analyzer = new StandardAnalyzer();
             IndexWriterConfig config = new IndexWriterConfig(analyzer);
             IndexWriter iwriter = new IndexWriter(directory, config);
-            for(int idx = 0 ; idx < split.getPassages().size() ; idx++) {
-                Mention ment = split.getPassages().get(idx);
-                ment.setMention_id(String.valueOf(idx));
+            for(Mention passage : split.getPassages()) {
                 Document doc = new Document();
-                String text = String.join(" ", ment.getMention_context());
+                String text = String.join(" ", passage.getMention_context());
                 doc.add(new Field(PASSAGE, text, TextField.TYPE_STORED));
-                doc.add(new Field(PASSAGE_ID, ment.getMention_id(), TextField.TYPE_STORED));
-                doc.add(new Field(PASSAGE_CORE_ID, String.valueOf(ment.getCoref_chain()), TextField.TYPE_STORED));
+                doc.add(new Field(PASSAGE_ID, passage.getMention_id(), TextField.TYPE_STORED));
+                doc.add(new Field(PASSAGE_CORE_ID, String.valueOf(passage.getCoref_chain()), TextField.TYPE_STORED));
                 iwriter.addDocument(doc);
             }
 

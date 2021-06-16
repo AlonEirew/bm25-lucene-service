@@ -1,25 +1,26 @@
 package data;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class WECSplit {
     private final SplitType splitType;
-    private final List<Mention> mentions;
     private final Map<Integer, Cluster> clusters;
 
     public WECSplit(SplitType splitType, List<Mention> mentions) {
         this.splitType = splitType;
-        this.mentions = mentions;
-        this.clusters = fromMentionsToCluster(this.mentions);
+        this.clusters = fromMentionsToCluster(mentions);
     }
 
     public SplitType getSplitType() {
         return splitType;
     }
 
-    public List<Mention> getMentions() {
+    public List<Mention> getAllClustersMentions() {
+        List<Mention> mentions = new ArrayList<>();
+        this.clusters.values().stream().map(Cluster::getMentions).forEach(mentions::addAll);
         return mentions;
     }
 
@@ -27,7 +28,7 @@ public class WECSplit {
         return clusters;
     }
 
-    public Map<Integer, Cluster> fromMentionsToCluster(List<Mention> mentions) {
+    private Map<Integer, Cluster> fromMentionsToCluster(List<Mention> mentions) {
         Map<Integer, Cluster> clusters = new HashMap<>();
         for (Mention ment : mentions) {
             if(!clusters.containsKey(ment.getCoref_chain())) {
@@ -42,7 +43,6 @@ public class WECSplit {
     public boolean addMentionToCluster(Mention mention) {
         if(mention != null && this.clusters.containsKey(mention.getCoref_chain())) {
             this.clusters.get(mention.getCoref_chain()).addMention(mention);
-            this.mentions.add(mention);
             return true;
         }
         return false;
@@ -50,9 +50,7 @@ public class WECSplit {
 
     public boolean removeMentionFromCluster(Mention mention) {
         if(mention != null && this.clusters.containsKey(mention.getCoref_chain())) {
-            boolean mentRm = this.mentions.removeIf(value -> value.getMention_id().equals(mention.getMention_id()));
-            boolean clustRm = this.clusters.get(mention.getCoref_chain()).removeMention(mention);
-            return mentRm && clustRm;
+            return this.clusters.get(mention.getCoref_chain()).removeMention(mention);
         }
         return false;
     }

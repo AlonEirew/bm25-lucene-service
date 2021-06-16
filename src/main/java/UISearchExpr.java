@@ -28,8 +28,8 @@ public class UISearchExpr {
 
         IndexSearcher idxSearcher = MainBM25.getIndexSearcher(indexDir);
         for(int i = 0 ; i < 5 ; i++) {
-            int rand = ThreadLocalRandom.current().nextInt(0, queries.getMentions().size());
-            Mention query = queries.getMentions().get(rand);
+            int rand = ThreadLocalRandom.current().nextInt(0, queries.getAllClustersMentions().size());
+            Mention query = queries.getAllClustersMentions().get(rand);
             int inQueryClust = passages.getClusters().get(query.getCoref_chain()).getMentions().size();
             String originQueryText = QueryParser.escape(String.join(" ", query.getMention_context()));
             ScoreDoc[] origHits = MainBM25.searchIndex(idxSearcher, parser, originQueryText, topK);

@@ -23,8 +23,12 @@ public class Cluster {
         return this.mentions.size() == 1;
     }
 
-    public void addMention(Mention mention) {
+    public void addMention(final Mention mention) {
         if(mention != null) {
+            if(this.mentions.stream().filter(current -> current.getMention_id().equals(mention.getMention_id()))
+                    .findFirst().orElse(null) != null) {
+                throw new IllegalStateException("Mention with this ID already in collection!");
+            }
             this.mentions.add(mention);
         }
     }

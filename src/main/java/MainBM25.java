@@ -1,6 +1,4 @@
 import data.*;
-import edu.stanford.nlp.pipeline.CoreNLPProtos;
-import edu.stanford.nlp.simple.Sentence;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
@@ -13,7 +11,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import utils.JsonUtils;
-import utils.Utils;
+import utils.NLPUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,8 +32,10 @@ public class MainBM25 {
         WECSplit queries = JsonUtils.readWECJsonFile(wecQueiresFile);
         WECSplit passages = JsonUtils.readWECJsonFile(wecPassagesFile);
         System.out.println("SPLIT=" + SPLIT);
-        System.out.println("Number of queries=" + queries.getMentions().size());
-        System.out.println("Number of passages=" + passages.getMentions().size());
+        List<Mention> allQueries = queries.getAllClustersMentions();
+        List<Mention> allPassages = passages.getAllClustersMentions();
+        System.out.println("Number of queries=" + allQueries.size());
+        System.out.println("Number of passages=" + allPassages.size());
         IndexSearcher indexSearcher = getIndexSearcher(indexDir);
 
 //        int[] topKs = {10, 50, 100, 150, 200, 300, 400, 500};
@@ -44,7 +44,7 @@ public class MainBM25 {
             BooleanQuery.setMaxClauseCount(4096);
             Analyzer analyzer = new StandardAnalyzer();
             QueryParser parser = new QueryParser(CreateOrDeleteIndex.PASSAGE, analyzer);
-            runLuceneExpr(indexSearcher, parser, queries.getMentions(), topK, passages.getClusters());
+            runLuceneExpr(indexSearcher, parser, allQueries, topK, passages.getClusters());
         }
         closeIndexSearcher(indexSearcher);
     }
@@ -58,11 +58,11 @@ public class MainBM25 {
         for(Mention ment : queries) {
             totalMents += passagesClusters.get(ment.getCoref_chain()).getMentions().size();
 //            String finalQuery = String.join(" ", ment.getMention_context());
-            String mentQuery = ment.getTokens_str();
-//            String mentQuery = Utils.getQuerySentence(ment);
-            String finalQuery = mentQuery + ". " + Utils.getQueryNERs(ment);
-//            String querySentence = Utils.getQueryNERs(ment);
+//            String mentQuery = ment.getTokens_str();
+//            String finalQuery = mentQuery + " . " + NLPUtils.getQueryNERs(ment);
+            String finalQuery = NLPUtils.getQuerySentence(ment);
 
+            assert finalQuery != null;
             String queryText = QueryParser.escape(finalQuery);
             ScoreDoc[] hits = searchIndex(idxSearcher, parser, queryText, topK);
             SearchResult searchResult = getSearchResult(idxSearcher, ment, hits);

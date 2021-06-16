@@ -1,9 +1,10 @@
-import data.Cluster;
 import data.Mention;
-import data.QueryPassagePair;
+import data.QueryPassageTriplet;
 import data.WECSplit;
-import jdk.jshell.execution.Util;
+import generators.AGenerator;
+import generators.GenerateTripletsExamplesUtils;
 import utils.JsonUtils;
+import utils.NLPUtils;
 import utils.Utils;
 
 import java.io.File;
@@ -12,9 +13,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class GenerateTrainExpls {
@@ -24,94 +23,60 @@ public class GenerateTrainExpls {
         WECSplit queries = JsonUtils.readWECJsonFile(wecQueiresFile);
         WECSplit passages = JsonUtils.readWECJsonFile(wecPassagesFile);
 
+//        AGenerator<QueryPassagePair> generator = new GeneratePairsExamplesUtils();
+        AGenerator<QueryPassageTriplet> generator = new GenerateTripletsExamplesUtils();
+
         // queries now consist of all clusters that should be used for rotating queries (Dev/Test)
         // passages now consist of all clusters that should be used as passages only  (Train)
         List<Mention> forRemoval = new ArrayList<>();
-        for(Mention pass : passages.getMentions()) {
+        for(Mention pass : passages.getAllClustersMentions()) {
             if(queries.addMentionToCluster(pass)) {
                 forRemoval.add(pass);
             }
         }
 
         for(Mention pass : forRemoval) {
-            if (!passages.removeMentionFromCluster(pass)) {
-                throw new Exception("Mention not removed!");
+            if(!passages.removeMentionFromCluster(pass)) {
+                throw new IllegalStateException("Passage not removed from collection!");
             }
         }
 
-        List<Mention> tmpList = new ArrayList<>(passages.getMentions());
-        tmpList.addAll(queries.getMentions());
-        Utils.reIndexMentionList(tmpList);
-
-        List<QueryPassagePair> queryPassagePairs = generateTrainExamples(queries, passages);
-        printColBertTrainFiles(queryPassagePairs, queries, passages);
+        List<QueryPassageTriplet> queryPassage = generator.generateTrainExamples(queries, passages);
+        List<String> trainExamples = generator.toPrintFormat(queryPassage);
+        printColBertTrainFiles(trainExamples, queries, passages);
     }
 
-    private static void printColBertTrainFiles(List<QueryPassagePair> queryPassagePairs, WECSplit queries,
+    private static void printColBertTrainFiles(List<String> trainExamples, WECSplit queries,
                                                WECSplit passages) throws IOException {
-        List<String> trainExamples = new ArrayList<>();
-        for (QueryPassagePair pair : queryPassagePairs) {
-            StringBuilder sb = new StringBuilder();
-            Mention query = pair.getQuery();
-            Mention passage = pair.getPassage();
-            int gold = pair.getGold();
-            sb.append(query.getMention_id()).append("\t").append(passage.getMention_id()).append("\t").append(gold);
-            trainExamples.add(sb.toString());
-        }
-
         Path colberTrainFile = Paths.get("output/colbert/trainExamples50.tsv");
         Files.write(colberTrainFile, trainExamples, Charset.defaultCharset());
 
-        List<Mention> passAndQuery = new ArrayList<>(passages.getMentions());
-        passAndQuery.addAll(queries.getMentions().stream().map(Mention::new).collect(Collectors.toList()));
+        List<Mention> passAndQuery = new ArrayList<>(passages.getAllClustersMentions());
+        passAndQuery.addAll(queries.getAllClustersMentions().stream().map(Mention::new).collect(Collectors.toList()));
 
-//        Utils.convertToEventWithNerQuery(queries.getMentions());
-        List<String> queryColbert = ToColBertFormat.mentionsToColBertFormat(queries.getMentions());
-        List<String> passageColbert = ToColBertFormat.mentionsToColBertFormat(passAndQuery);
+        NLPUtils.convertToEventSentenceQuery(queries.getAllClustersMentions());
+        if (!Utils.assertNoDups(queries.getAllClustersMentions()) || !Utils.assertNoDups(passAndQuery)) {
+            throw new IllegalStateException("Queries of passages contains duplicate id's");
+        }
+
+        List<Integer> querySizes = queries.getAllClustersMentions().stream().map(value -> value.getMention_context().size()).collect(Collectors.toList());
+        List<Integer> passSizes = passAndQuery.stream().map(value -> value.getMention_context().size()).collect(Collectors.toList());
+        int queryMax = querySizes.stream().max(Integer::compare).get();
+        double queryAvg = querySizes.stream().mapToInt(Integer::intValue).average().getAsDouble();
+        int passMax = passSizes.stream().max(Integer::compare).get();
+        double passAvg = passSizes.stream().mapToInt(Integer::intValue).average().getAsDouble();
+
+        System.out.println("Maximum query length = " + queryMax);
+        System.out.println("Average query length = " + queryAvg);
+        System.out.println("Maximum passage length = " + passMax);
+        System.out.println("Average passage length = " + passAvg);
+
+        List<String> queryColbert = GenerateTestExpls.mentionsToColBertFormat(queries.getAllClustersMentions());
+        List<String> passageColbert = GenerateTestExpls.mentionsToColBertFormat(passAndQuery);
 
         Path queriesOutFile = Paths.get("output/colbert/trainQueryColbert.tsv");
         Path passagesOutFile = Paths.get("output/colbert/trainPassageColbert.tsv");
         Files.write(queriesOutFile, queryColbert, Charset.defaultCharset());
         Files.write(passagesOutFile, passageColbert, Charset.defaultCharset());
-    }
-
-    private static List<QueryPassagePair> generateTrainExamples(WECSplit queries, WECSplit passages) {
-        List<QueryPassagePair> queryPassagePairs = new ArrayList<>();
-        for(Cluster cluster : queries.getClusters().values()) {
-            queryPassagePairs.addAll(generatePosExamples(cluster));
-            queryPassagePairs.addAll(generateNegExamples(cluster, passages));
-        }
-
-        return queryPassagePairs;
-    }
-
-    private static List<QueryPassagePair> generatePosExamples(Cluster cluster) {
-        List<QueryPassagePair> posPairs = new ArrayList<>();
-        for(Mention ment1 : cluster.getMentions()) {
-            for(Mention ment2 : cluster.getMentions()) {
-                if(!ment1.getMention_id().equals(ment2.getMention_id())) {
-                    posPairs.add(new QueryPassagePair(ment1, ment2));
-                }
-            }
-        }
-
-        return posPairs;
-    }
-
-    private static List<QueryPassagePair> generateNegExamples(Cluster cluster, WECSplit passages) {
-        List<QueryPassagePair> negPairs = new ArrayList<>();
-        for(Mention ment : cluster.getMentions()) {
-            List<Mention> passagesList = new ArrayList<>(cluster.getMentions());
-            passagesList.removeIf(value -> value.getMention_id().equals(ment.getMention_id()));
-            passagesList.addAll(passages.getMentions());
-            Collections.shuffle(passagesList);
-
-            List<Mention> subPassArr = passagesList.subList(0, 50);
-            for(Mention negPass : subPassArr) {
-                negPairs.add(new QueryPassagePair(ment, negPass));
-            }
-        }
-
-        return negPairs;
     }
 }
