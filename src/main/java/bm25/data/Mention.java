@@ -1,4 +1,4 @@
-package data;
+package bm25.data;
 
 import java.util.List;
 

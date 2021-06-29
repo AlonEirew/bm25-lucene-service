@@ -1,7 +1,6 @@
-package generators;
+package bm25.generators;
 
-import data.*;
-import generators.AGenerator;
+import bm25.data.*;
 
 import java.util.ArrayList;
 import java.util.Collections;

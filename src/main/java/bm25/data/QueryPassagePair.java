@@ -1,4 +1,4 @@
-package data;
+package bm25.data;
 
 public class QueryPassagePair {
     private final Mention query;

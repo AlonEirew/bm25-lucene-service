@@ -1,11 +1,13 @@
-import data.Mention;
-import data.QueryPassageTriplet;
-import data.WECSplit;
-import generators.AGenerator;
-import generators.GenerateTripletsExamplesUtils;
-import utils.JsonUtils;
-import utils.NLPUtils;
-import utils.Utils;
+package bm25.scripts;
+
+import bm25.data.Mention;
+import bm25.data.QueryPassageTriplet;
+import bm25.data.WECSplit;
+import bm25.generators.AGenerator;
+import bm25.generators.GenerateTripletsExamplesUtils;
+import bm25.utils.JsonUtils;
+import bm25.utils.NLPUtils;
+import bm25.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;

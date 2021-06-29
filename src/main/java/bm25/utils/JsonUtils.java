@@ -1,13 +1,12 @@
-package utils;
+package bm25.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
-import data.Mention;
-import data.SplitType;
-import data.WECSplit;
+import bm25.data.Mention;
+import bm25.data.SplitType;
+import bm25.data.WECSplit;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -19,7 +18,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 public class JsonUtils {
-    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     public static List<WECSplit> readWECJsonFolder(String wecFolder) {
         List<WECSplit> wecSplits = new ArrayList<>();
@@ -55,12 +54,8 @@ public class JsonUtils {
         return new WECSplit(splitType, mentList);
     }
 
-    public static void writeWECJsonFile(List<Mention> mentions, String wec_output) throws IOException {
-        OutputStreamWriter os = new OutputStreamWriter(new FileOutputStream(wec_output), StandardCharsets.UTF_8);
-        JsonWriter output = new JsonWriter(os);
-        Type MENTION_TYPE = new TypeToken<List<Mention>>() {}.getType();
-        GSON.toJson(mentions, MENTION_TYPE, output);
-        output.flush();
-        output.close();
+    public static <T> void writeJsonObjListToFile(List<T> objects, String output_file) throws IOException {
+        String json = GSON.toJson(objects);
+        Files.writeString(new File(output_file).toPath(), json, StandardCharsets.UTF_8);
     }
 }

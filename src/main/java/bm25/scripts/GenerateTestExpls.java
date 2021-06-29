@@ -1,8 +1,10 @@
-import data.Mention;
-import data.WECSplit;
-import utils.JsonUtils;
-import utils.NLPUtils;
-import utils.Utils;
+package bm25.scripts;
+
+import bm25.data.Mention;
+import bm25.data.WECSplit;
+import bm25.utils.JsonUtils;
+import bm25.utils.NLPUtils;
+import bm25.utils.Utils;
 
 import java.io.File;
 import java.io.IOException;

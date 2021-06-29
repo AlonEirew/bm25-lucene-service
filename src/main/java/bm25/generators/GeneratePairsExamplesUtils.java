@@ -1,9 +1,9 @@
-package generators;
+package bm25.generators;
 
-import data.Cluster;
-import data.Mention;
-import data.QueryPassagePair;
-import data.WECSplit;
+import bm25.data.Cluster;
+import bm25.data.Mention;
+import bm25.data.QueryPassagePair;
+import bm25.data.WECSplit;
 
 import java.util.ArrayList;
 import java.util.Collections;

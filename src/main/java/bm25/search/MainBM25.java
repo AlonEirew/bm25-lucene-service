@@ -1,4 +1,7 @@
-import data.*;
+package bm25.search;
+
+import bm25.data.*;
+import bm25.index.CreateOrDeleteIndex;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
@@ -10,8 +13,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import utils.JsonUtils;
-import utils.NLPUtils;
+import bm25.utils.JsonUtils;
+import bm25.utils.NLPUtils;
 
 import java.io.File;
 import java.io.IOException;

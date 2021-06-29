@@ -1,6 +1,6 @@
-package utils;
+package bm25.utils;
 
-import data.Mention;
+import bm25.data.Mention;
 
 import java.util.List;
 import java.util.Set;

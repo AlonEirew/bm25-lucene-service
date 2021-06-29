@@ -1,6 +1,6 @@
-package utils;
+package bm25.utils;
 
-import data.Mention;
+import bm25.data.Mention;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.CoreDocument;
 import edu.stanford.nlp.pipeline.CoreNLPProtos;
@@ -56,6 +56,22 @@ public class NLPUtils {
     }
 
     public static String getQuerySentence(Mention query) {
+        Sentence sentence = getSentence(query);
+        if(sentence != null) {
+            return sentence.text();
+        }
+        return null;
+    }
+
+    public static int getQuerySentenceInx(Mention query) {
+        Sentence sentence = getSentence(query);
+        if(sentence != null) {
+            return sentence.sentenceIndex();
+        }
+        return -1;
+    }
+
+    private static Sentence getSentence(Mention query) {
         edu.stanford.nlp.simple.Document doc = new edu.stanford.nlp.simple.Document(
                 String.join(" ", query.getMention_context()));
 
@@ -63,7 +79,7 @@ public class NLPUtils {
             for (int i = 0; i < sent.tokens().size(); i++) {
                 CoreNLPProtos.Token.Builder builder = sent.rawToken(i);
                 if (builder.getTokenBeginIndex() == query.getTokens_number().get(0)) {
-                    return sent.text();
+                    return sent;
                 }
             }
         }

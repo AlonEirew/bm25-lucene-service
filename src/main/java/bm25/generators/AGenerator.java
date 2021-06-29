@@ -1,6 +1,6 @@
-package generators;
+package bm25.generators;
 
-import data.WECSplit;
+import bm25.data.WECSplit;
 
 import java.util.List;
 

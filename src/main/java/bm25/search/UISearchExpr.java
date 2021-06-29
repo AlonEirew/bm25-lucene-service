@@ -1,11 +1,14 @@
-import data.Mention;
-import data.WECSplit;
+package bm25.search;
+
+import bm25.data.Mention;
+import bm25.data.WECSplit;
+import bm25.index.CreateOrDeleteIndex;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.ScoreDoc;
-import utils.JsonUtils;
+import bm25.utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;

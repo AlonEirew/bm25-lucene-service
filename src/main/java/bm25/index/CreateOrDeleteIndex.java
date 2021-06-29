@@ -1,5 +1,7 @@
+package bm25.index;
+
 import com.google.common.collect.Lists;
-import data.*;
+import bm25.data.*;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -10,7 +12,7 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.IOUtils;
-import utils.JsonUtils;
+import bm25.utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -78,9 +80,9 @@ public class CreateOrDeleteIndex {
 
     private static void writeJsonToFile(Map<SplitType, SearchSplit> splitParts, String outFolder) throws IOException {
         for(SplitType st : splitParts.keySet()) {
-            JsonUtils.writeWECJsonFile(splitParts.get(st).getQueries(),
+            JsonUtils.writeJsonObjListToFile(splitParts.get(st).getQueries(),
                     outFolder + File.separator + st.name() + "_queries.json");
-            JsonUtils.writeWECJsonFile(splitParts.get(st).getPassages(),
+            JsonUtils.writeJsonObjListToFile(splitParts.get(st).getPassages(),
                     outFolder + File.separator + st.name() + "_passages.json");
         }
     }

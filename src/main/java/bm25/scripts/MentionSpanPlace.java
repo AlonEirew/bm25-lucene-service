@@ -1,7 +1,7 @@
-package scripts;
+package bm25.scripts;
 
-import data.WECSplit;
-import utils.JsonUtils;
+import bm25.data.WECSplit;
+import bm25.utils.JsonUtils;
 
 import java.io.File;
 import java.util.List;
