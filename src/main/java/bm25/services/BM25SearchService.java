@@ -36,6 +36,7 @@ public class BM25SearchService {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public BM25SearchResponse bm25Search(@RequestBody BM25SearchRequest searchRequest) {
+        LOGGER.info("Got bm25Search request " + Utils.getGSON().toJson(searchRequest));
         try {
             return runSearch(searchRequest);
         } catch (Exception e) {

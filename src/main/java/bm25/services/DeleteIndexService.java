@@ -21,6 +21,7 @@ public class DeleteIndexService {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public DeleteIndexResponse deleteLuceneIndex(@RequestBody String deleteIndexRequest) {
+        LOGGER.info("Got deleteLuceneIndex request " + Utils.getGSON().toJson(deleteIndexRequest));
         try {
             if(Utils.getKeyToIndexMap().containsKey(deleteIndexRequest)) {
                 IOUtils.rm(Paths.get(Utils.getKeyToIndexMap().get(deleteIndexRequest)));

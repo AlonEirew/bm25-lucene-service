@@ -1,8 +1,8 @@
 package bm25.services;
 
-import bm25.utils.Utils;
 import bm25.data.CreateIndexRequest;
 import bm25.data.CreateIndexResponse;
+import bm25.utils.Utils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -25,9 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 public class CreateIndexService {
@@ -37,15 +35,27 @@ public class CreateIndexService {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE)
     public CreateIndexResponse createLuceneIndex(@RequestBody CreateIndexRequest createIndexRequest) {
+        LOGGER.info("Got createLuceneIndex request " + Utils.getGSON().toJson(createIndexRequest));
         try {
+            boolean isIndexExist = Files.exists(Paths.get(createIndexRequest.getIndexPath()));
             if(!Utils.getKeyToIndexMap().containsValue(createIndexRequest.getIndexPath())) {
-                return createResources(createIndexRequest);
+                if (!isIndexExist) {
+                    return createResources(createIndexRequest);
+                } else {
+                    return new CreateIndexResponse(0, "NA", "Failed, folder " +
+                            createIndexRequest.getIndexPath() + " already exists");
+                }
             } else {
                 String uuid = Utils.getKeyToIndexMap().entrySet().stream()
                         .filter(entry -> Objects.equals(entry.getValue(), createIndexRequest.getIndexPath()))
                         .map(Map.Entry::getKey).findFirst().get();
 
-                return new CreateIndexResponse(0, uuid, "Index created successfully");
+                if(isIndexExist) {
+                    return new CreateIndexResponse(0, uuid, "Index already exists, returning indexId");
+                } else {
+                    Utils.getKeyToIndexMap().remove(uuid);
+                    return createResources(createIndexRequest);
+                }
             }
         } catch (Exception e) {
             LOGGER.error("Failed parsing the request");

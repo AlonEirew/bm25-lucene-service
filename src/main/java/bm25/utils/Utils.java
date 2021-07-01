@@ -17,6 +17,7 @@ public class Utils {
     public static final String TEST_FIELD_DOC_ID = "doc_id";
 
     private static final Gson GSONPrettyPrint = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
+    private static final Gson GSON = new Gson();
     private static String keyToIndexMapFile;
     private static Map<String, String> keyToIndexMap = new ConcurrentHashMap<>();
 
@@ -38,6 +39,8 @@ public class Utils {
         if(keyToIndexMap == null) {
             keyToIndexMap = GSONPrettyPrint.fromJson(Files.readString(Paths.get(keyToIndexMapFile)),
                     new TypeToken<Map<String, String>>() {}.getType());
+
+            keyToIndexMap.entrySet().removeIf(entry -> Files.notExists(Paths.get(keyToIndexMap.get(entry.getValue()))));
         }
 
         return keyToIndexMap;
@@ -45,11 +48,16 @@ public class Utils {
 
     public static void saveKeyToIndexMap() throws IOException {
         if(keyToIndexMap != null) {
+            keyToIndexMap.entrySet().removeIf(entry -> Files.notExists(Paths.get(keyToIndexMap.get(entry.getValue()))));
             Files.writeString(Paths.get(Utils.keyToIndexMapFile), GSONPrettyPrint.toJson(keyToIndexMap));
         }
     }
 
     public static Gson getGSONPrettyPrint() {
         return GSONPrettyPrint;
+    }
+
+    public static Gson getGSON() {
+        return GSON;
     }
 }

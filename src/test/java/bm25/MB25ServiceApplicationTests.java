@@ -32,8 +32,8 @@ class MB25ServiceApplicationTests {
 	@Test
 	void createSearchAndDeleteIndex() throws Exception {
 		CreateIndexRequest request = new CreateIndexRequest(
-				"/Users/aeirew/workspace/wec-search-bm25/src/test/resources/passages.tsv",
-				"/Users/aeirew/workspace/wec-search-bm25/tempIndex/test");
+				"src/test/resources/passages.tsv",
+				"tempIndex/test");
 
 		MvcResult mvcCreateResult = this.mockMvc.perform(MockMvcRequestBuilders.put("/createLuceneIndex")
 				.contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON)
