@@ -1,6 +1,6 @@
 # BM25 Lucene Service
-This project is a light weight service that wrap Lucene java implementation for non-java languages.<br/>
-The API provides access via HTTP calls to Lucene strong indexing and BM25 search capabilities on large data collection.
+This project provides a lightweight service that wrap Lucene java implementation, for use from non-java languages.<br/>
+The API provides access via HTTP calls to Lucene strong indexing and BM25 search capabilities. Specially, for querying a large scale documents or passages collection.
 
 ## Table Of Contents
 
@@ -60,7 +60,7 @@ Where:
 - `message` - Log information in case of failure 
 
 ### Search 
-HTTP *POST* method to search using BM25 a created Lucene index <br/>
+HTTP *POST* method to search a Lucene index using BM25 method<br/>
 URL - http://localhost:8085/bm25Search
 
 #### Search Request Example
