@@ -120,4 +120,4 @@ Where:
 - `message` - Log information in case of failure 
 
 ## Python Example
-For python code snippet see [example/py_code.py](https://github.com/AlonEirew/bm25-lucene-service/example/py_code.py)
+Simple python client code snippet at [example/py_code.py](https://github.com/AlonEirew/bm25-lucene-service/blob/master/example/py_code.py)
