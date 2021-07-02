@@ -10,6 +10,7 @@ The API provides access via HTTP calls to Lucene strong indexing and BM25 search
     - [Create](https://github.com/AlonEirew/bm25-lucene-service#Create)
     - [Search](https://github.com/AlonEirew/bm25-lucene-service#Search)
     - [Delete](https://github.com/AlonEirew/bm25-lucene-service#Delete)
+- [Python Example](https://github.com/AlonEirew/bm25-lucene-service#Python-Example)
 
 ***
 
@@ -18,6 +19,7 @@ The API provides access via HTTP calls to Lucene strong indexing and BM25 search
 
 ## Build and Run
 ### Building the service executable
+This will create a portable independent jar file in `build/libs/bm25-lucene-service-1.0-SNAPSHOT.jar'
 ```
 #>git clone https://github.com/AlonEirew/bm25-lucene-service.git
 #>./gradlew clean build -x test
@@ -25,7 +27,7 @@ The API provides access via HTTP calls to Lucene strong indexing and BM25 search
 
 ### Running the service
 ```
-#>java -jar build/libs/bm25-lucene-service-1.0-SNAPSHOT.jar
+#>java -jar bm25-lucene-service-1.0-SNAPSHOT.jar
 ```
 
 ## API
@@ -116,3 +118,6 @@ Json:
 Where:
 - `deleted` - Boolean indicates of success or failure
 - `message` - Log information in case of failure 
+
+## Python Example
+For python code snippet see [example/py_code.py](https://github.com/AlonEirew/bm25-lucene-service/example/py_code.py)

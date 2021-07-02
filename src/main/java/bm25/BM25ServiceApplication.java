@@ -36,8 +36,6 @@ public class BM25ServiceApplication {
 
 	@Bean
 	public CommandLineRunner runner(Environment environment) {
-		return (args) -> {
-			Utils.setKeyToIndexMapFile(Objects.requireNonNull(environment.getProperty("main.keyToIndexMapFile")));
-		};
+		return (args) -> Utils.setKeyToIndexMapFile(Objects.requireNonNull(environment.getProperty("main.keyToIndexMapFile")));
 	}
 }

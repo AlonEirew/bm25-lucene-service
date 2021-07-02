@@ -36,36 +36,39 @@ public class CreateIndexService {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public CreateIndexResponse createLuceneIndex(@RequestBody CreateIndexRequest createIndexRequest) {
         LOGGER.info("Got createLuceneIndex request " + Utils.getGSON().toJson(createIndexRequest));
+        CreateIndexResponse response;
         try {
             boolean isIndexExist = Files.exists(Paths.get(createIndexRequest.getIndexPath()));
             if(!Utils.getKeyToIndexMap().containsValue(createIndexRequest.getIndexPath())) {
                 if (!isIndexExist) {
-                    return createResources(createIndexRequest);
+                    response = createResources(createIndexRequest);
                 } else {
-                    return new CreateIndexResponse(0, "NA", "Failed, folder " +
+                    response = new CreateIndexResponse(0, "NA", "Failed, folder " +
                             createIndexRequest.getIndexPath() + " already exists");
                 }
             } else {
                 String uuid = Utils.getKeyToIndexMap().entrySet().stream()
                         .filter(entry -> Objects.equals(entry.getValue(), createIndexRequest.getIndexPath()))
                         .map(Map.Entry::getKey).findFirst().get();
-
                 if(isIndexExist) {
-                    return new CreateIndexResponse(0, uuid, "Index already exists, returning indexId");
+                    response = new CreateIndexResponse(0, uuid, "Index already exists, returning indexId");
                 } else {
                     Utils.getKeyToIndexMap().remove(uuid);
-                    return createResources(createIndexRequest);
+                    response = createResources(createIndexRequest);
                 }
             }
         } catch (Exception e) {
             LOGGER.error("Failed parsing the request");
-            return new CreateIndexResponse(0, "NA", e.toString());
+            response = new CreateIndexResponse(0, "NA", e.toString());
         }
+
+        LOGGER.info("Index create response-" + Utils.getGSON().toJson(response));
+        return response;
     }
 
     private CreateIndexResponse createResources(CreateIndexRequest createIndexRequest) throws IOException {
         Map<String, String> inputKeyValues = Utils.readPassageQueryFileFormat(createIndexRequest.getInputPath());
-        Path indexPath = Files.createDirectory(Paths.get(createIndexRequest.getIndexPath()));
+        Path indexPath = Files.createDirectories(Paths.get(createIndexRequest.getIndexPath()));
         Directory directory = FSDirectory.open(indexPath);
         Analyzer analyzer = new StandardAnalyzer();
         IndexWriterConfig config = new IndexWriterConfig(analyzer);

@@ -2,3 +2,6 @@
 .idea
 build
 tempIndex
+resources
+logs
+keyToIndexMapFile.json

@@ -37,12 +37,16 @@ public class BM25SearchService {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public BM25SearchResponse bm25Search(@RequestBody BM25SearchRequest searchRequest) {
         LOGGER.info("Got bm25Search request " + Utils.getGSON().toJson(searchRequest));
+        BM25SearchResponse response;
         try {
-            return runSearch(searchRequest);
+            response = runSearch(searchRequest);
         } catch (Exception e) {
             LOGGER.error("Failed parsing the request");
-            return new BM25SearchResponse(searchRequest.getQueryId(), new ArrayList<>(), e.toString());
+            response = new BM25SearchResponse(searchRequest.getQueryId(), new ArrayList<>(), e.toString());
         }
+
+        LOGGER.info("Search response-" + Utils.getGSON().toJson(response));
+        return response;
     }
 
     private BM25SearchResponse runSearch(BM25SearchRequest searchRequest) throws IOException, ParseException {
