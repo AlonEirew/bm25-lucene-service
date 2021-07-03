@@ -29,7 +29,7 @@ public class DeleteIndexService {
                 response = new DeleteIndexResponse("false", "Index with uuid=" + deleteIndexRequest + " not found");
             }
         } catch (Exception e) {
-            LOGGER.error("Failed parsing the request");
+            LOGGER.error("Failed parsing the request", e);
             response = new DeleteIndexResponse("false", e.toString());
         }
 

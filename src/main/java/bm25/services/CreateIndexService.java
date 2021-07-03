@@ -58,7 +58,7 @@ public class CreateIndexService {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Failed parsing the request");
+            LOGGER.error("Failed parsing the request", e);
             response = new CreateIndexResponse(0, "NA", e.toString());
         }
 

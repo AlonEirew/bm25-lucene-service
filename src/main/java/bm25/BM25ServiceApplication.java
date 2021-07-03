@@ -28,7 +28,7 @@ public class BM25ServiceApplication {
 		LOGGER.info("Saving keyToIndexMapFile before shutdown");
 		try {
 			Utils.saveKeyToIndexMap();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			LOGGER.error("Failed to write keyToIndexMapFile", e);
 		}
 		LOGGER.info("Done!");

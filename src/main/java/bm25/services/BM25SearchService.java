@@ -41,7 +41,7 @@ public class BM25SearchService {
         try {
             response = runSearch(searchRequest);
         } catch (Exception e) {
-            LOGGER.error("Failed parsing the request");
+            LOGGER.error("Failed parsing the request", e);
             response = new BM25SearchResponse(searchRequest.getQueryId(), new ArrayList<>(), e.toString());
         }
 

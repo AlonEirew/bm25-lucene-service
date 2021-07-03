@@ -29,8 +29,12 @@ public class Utils {
     public static Map<String, String> readPassageQueryFileFormat(String inputFile) throws IOException {
         Map<String, String> results = new HashMap<>();
         List<String> lines = Files.readAllLines(Paths.get(inputFile));
-        for(String line : lines) {
-            String[] split = line.split("\t");
+        for(int line_index = 0 ; line_index < lines.size() ; line_index++) {
+            String[] split = lines.get(line_index).split("\t");
+            if (split.length < 2) {
+                LOGGER.info("Illegal line format in line No-" + line_index +", " +
+                        "line text=\"" + lines.get(line_index) + "\", in file-" + inputFile);
+            }
             results.put(split[0].strip(), split[1].trim());
         }
         return results;
@@ -59,9 +63,11 @@ public class Utils {
     }
 
     public static void saveKeyToIndexMap() throws IOException {
+        String csq = GSONPrettyPrint.toJson(keyToIndexMap);
+        LOGGER.debug("Prepare to save key to index map-" + csq);
         if(keyToIndexMap != null) {
-            keyToIndexMap.entrySet().removeIf(entry -> Files.notExists(Paths.get(keyToIndexMap.get(entry.getValue()))));
-            Files.writeString(Paths.get(Utils.keyToIndexMapFile), GSONPrettyPrint.toJson(keyToIndexMap));
+            keyToIndexMap.entrySet().removeIf(entry -> Files.notExists(Paths.get(entry.getValue())));
+            Files.writeString(Paths.get(Utils.keyToIndexMapFile), csq);
         }
     }
 
