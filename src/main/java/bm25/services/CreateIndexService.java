@@ -67,7 +67,7 @@ public class CreateIndexService {
     }
 
     private CreateIndexResponse createResources(CreateIndexRequest createIndexRequest) throws IOException {
-        Map<String, String> inputKeyValues = Utils.readPassageQueryFileFormat(createIndexRequest.getInputPath());
+        Map<String, String> inputKeyValues = Utils.readPassageFileFormat(createIndexRequest.getInputPath());
         Path indexPath = Files.createDirectories(Paths.get(createIndexRequest.getIndexPath()));
         Directory directory = FSDirectory.open(indexPath);
         Analyzer analyzer = new StandardAnalyzer();

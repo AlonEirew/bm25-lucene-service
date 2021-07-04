@@ -26,7 +26,7 @@ public class Utils {
     private static String keyToIndexMapFile;
     private static Map<String, String> keyToIndexMap;
 
-    public static Map<String, String> readPassageQueryFileFormat(String inputFile) throws IOException {
+    public static Map<String, String> readPassageFileFormat(String inputFile) throws IOException {
         Map<String, String> results = new HashMap<>();
         List<String> lines = Files.readAllLines(Paths.get(inputFile));
         for(int line_index = 0 ; line_index < lines.size() ; line_index++) {
@@ -52,7 +52,7 @@ public class Utils {
                         new TypeToken<Map<String, String>>() {
                         }.getType());
 
-                keyToIndexMap.entrySet().removeIf(entry -> Files.notExists(Paths.get(keyToIndexMap.get(entry.getValue()))));
+                keyToIndexMap.entrySet().removeIf(entry -> Files.notExists(Paths.get(entry.getValue())));
                 LOGGER.debug("keyToIndexMapFile loaded successfully-" + GSON.toJson(keyToIndexMap));
             } else {
                 keyToIndexMap = new HashMap<>();
